@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión 1: ¿Quién es el Técnico en Informática? – GRUPO 1 · EL PERFIL PROFESIONAL</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#effff3;--muted:#b7dfc2;--deep:#061715;--panel:#0c2925;
+    --line:#21584f;--green:#64e05a;--cyan:#45e7e2;--gold:#e5ae28;--red:#dc5265;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"DM Sans",sans-serif;color:var(--ink);overflow-x:hidden;background:#081d1a}
+  #game-root{width:100%;min-height:calc(100 * min(var(--vh, 1vh), 1vh));position:relative;overflow:hidden;background:#081d1a}
+  #game-root:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(170,255,220,.025) 3px 4px)}
+  .start-screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,#31bd5c 0%,#75da83 58%,#1c9551 100%);overflow:hidden;transition:opacity .35s,visibility .35s}
+  .start-screen:before{content:"";position:absolute;inset:auto 0 0;height:24%;background:repeating-linear-gradient(0deg,#713115 0 7px,#a44d19 7px 12px,#5b2815 12px 16px);border-top:6px solid #19853d;box-shadow:inset 0 9px #42c94d}
+  .start-screen:after{content:"\2601\FE0F   \2601\FE0F                 \2601\FE0F";position:absolute;top:8%;left:6%;right:6%;color:#d5ffe2;font-size:clamp(2rem,7vw,4.5rem);letter-spacing:.3em;opacity:.9;white-space:nowrap}
+  .pixel-landscape{position:absolute;inset:0;pointer-events:none;z-index:0}
+  .pixel-landscape:before,.pixel-landscape:after{content:"";position:absolute;bottom:16%;width:88px;height:125px;background:#21ad3e;clip-path:polygon(50% 0,66% 25%,57% 25%,82% 48%,67% 48%,100% 73%,0 73%,33% 48%,18% 48%,43% 25%,34% 25%);filter:drop-shadow(8px 9px 0 #126b39)}
+  .pixel-landscape:before{left:5%}.pixel-landscape:after{right:4%;transform:scale(1.15)}
+  .pixel-house{position:absolute;z-index:1;bottom:16%;left:17%;width:82px;height:67px;background:#4d168c;border:5px solid #27134f;box-shadow:inset 8px 0 #7621ae,inset -8px 0 #351261}
+  .pixel-house:before{content:"";position:absolute;left:-13px;top:-37px;border-left:47px solid transparent;border-right:47px solid transparent;border-bottom:37px solid #ff3f72;filter:drop-shadow(0 5px 0 #8f174e)}
+  .pixel-house:after{content:"";position:absolute;left:28px;bottom:0;width:22px;height:32px;background:#17143e;border:4px solid #24134e}
+  @media(max-width:640px){.pixel-house{left:14%;transform:scale(.72);transform-origin:bottom left}.pixel-landscape:before,.pixel-landscape:after{transform:scale(.72);transform-origin:bottom}.pixel-landscape:after{transform:scale(.82);transform-origin:bottom right}}
+  .start-screen.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+  .start-card{position:relative;z-index:1;text-align:center;margin-top:-9vh}
+  .start-title{font-family:"Press Start 2P",monospace;font-size:clamp(1.5rem,6vw,3.4rem);line-height:1.32;color:#f7fff8;text-shadow:5px 5px 0 #145b36,0 0 18px rgba(255,255,255,.35);letter-spacing:.04em}
+  .start-group{margin-top:18px;display:inline-block;font-family:"Press Start 2P",monospace;font-size:clamp(.7rem,2.6vw,1rem);color:#0d3f22;background:#f7fff8;border:4px solid #1cac3e;padding:10px 16px}
+  .start-button{font-family:"Press Start 2P",monospace;font-size:clamp(.85rem,3vw,1.35rem);padding:14px 28px;margin-top:26px;display:block;margin-left:auto;margin-right:auto;background:#f7fff8;color:#1cac3e;border:4px solid #1cac3e;box-shadow:0 5px 0 #116d2b, inset 0 0 0 3px #b7f7bf;cursor:pointer;transition:transform .15s,filter .15s}
+  .start-button:hover,.start-button:focus-visible{transform:translateY(-3px);filter:brightness(1.08);outline:3px solid #fff;outline-offset:4px}
+  .game-shell{width:100%;max-width:760px;margin:auto;padding:10px;position:relative;z-index:1}
+  .pixel-font{font-family:"Press Start 2P",monospace}
+  .hud,.pixel-panel,.rank-card{background:rgba(6,26,23,.72);border:2px solid #1b4d45;box-shadow:inset 2px 2px rgba(124,245,196,.12),inset -4px -4px rgba(0,0,0,.34),0 7px 0 rgba(0,8,7,.48)}
+  .pixel-panel{border-color:#245e54}
+  .logo-block{width:52px;height:52px;display:grid;place-items:center;background:#123a33;border:3px solid #36d9b7;box-shadow:inset 3px 3px #5df2ac,inset -3px -3px #07513e;font-size:25px}
+  .tech-chip{background:#123e36;border:1px solid #2c8878;padding:.55rem .75rem}
+  .mission{display:none;animation:rise .4s ease both}.mission.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}
+  .pixel-tag{display:inline-block;padding:8px 10px;border:2px solid rgba(0,0,0,.42);font:10px "Press Start 2P",monospace;line-height:1.5;background:#123e36;color:#bdf7d9}
+  .choice,.action-card{width:100%;text-align:left;color:var(--ink);background:rgba(18,61,53,.78);border:2px solid #205d52;padding:10px 12px;font-weight:800;cursor:pointer;box-shadow:inset 2px 2px rgba(112,250,201,.16),inset -3px -3px rgba(0,0,0,.32),0 4px 0 #04130f;transition:transform .14s,filter .14s,background .14s}
+  .choice:hover,.action-card:hover,.choice:focus-visible,.action-card:focus-visible{transform:translate(-2px,-2px);filter:brightness(1.13);outline:3px solid var(--cyan);outline-offset:3px}
+  .choice.correct,.action-card.safe{background:#27773b;border-color:#a6f870}
+  .choice.wrong,.action-card.danger{background:#81343e;border-color:#ff9a9a}
+  .action-card.selected{outline:3px solid var(--gold);outline-offset:2px}
+  .pixel-button{cursor:pointer;border:3px solid #856015;background:#e5ae28;color:#1b1708;padding:12px 15px;font-weight:900;box-shadow:inset 3px 3px #ffe77a,inset -3px -3px #986411,0 5px 0 #4d370c;transition:.15s}
+  .pixel-button:hover,.pixel-button:focus-visible{transform:translateY(-2px);filter:brightness(1.1);outline:3px solid #fff2a2;outline-offset:3px}
+  .progress-track{height:16px;background:#04130f;border:2px solid #164036}
+  .progress-fill{height:100%;width:0;background:repeating-linear-gradient(90deg,#61ee70 0 18px,#259f6b 18px 24px);box-shadow:0 0 10px #50ffb4;transition:width .45s ease}
+  .feedback{min-height:28px;font-weight:800}.hidden{display:none!important}
+  .terminal{border:2px solid #21695b;background:#041411;box-shadow:inset 0 0 25px rgba(58,230,198,.09)}
+  .code-line{font-family:"Press Start 2P",monospace;font-size:10px;color:#76ffc7;line-height:1.95}
+  .hacker-stage{position:relative;overflow:hidden;border:2px solid #8a354c;background:radial-gradient(circle at 50% 25%,#3b1725,#100d13 71%);box-shadow:inset 0 0 55px rgba(255,48,104,.18),0 0 28px rgba(225,57,103,.15)}
+  .hacker-stage:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(0deg,transparent 0 5px,#ff789c 5px 6px);animation:scan 4s linear infinite}
+  @keyframes scan{from{transform:translateY(-14px)}to{transform:translateY(14px)}}
+  .hacker-portrait{width:150px;height:150px;margin:auto;position:relative;border-radius:50%;background:radial-gradient(circle at 50% 36%,#2e3239 0 20%,#12151a 21% 47%,#050607 48%);box-shadow:0 0 0 8px rgba(255,70,122,.09),0 0 35px rgba(255,57,110,.38)}
+  .hacker-portrait:before{content:"";position:absolute;left:28px;right:28px;top:62px;height:26px;background:#07080b;border-radius:4px;box-shadow:0 -6px 0 #20242b}
+  .hacker-portrait:after{content:"";position:absolute;left:42px;right:42px;top:74px;height:4px;background:#ff3f78;box-shadow:0 0 15px #ff3f78,35px 0 0 #ff3f78}
+  .noise{font-family:"Press Start 2P",monospace;font-size:10px;letter-spacing:.15em;color:#ff9abb;opacity:.8;animation:flicker .22s steps(2,end) infinite}
+  @keyframes flicker{50%{opacity:.3;transform:translateX(2px)}}
+  .capture-stage{border:2px solid #46c9ff;background:radial-gradient(circle,#123a5e,#07131f 70%);box-shadow:inset 0 0 42px rgba(61,196,255,.25)}
+  .star-line{font-size:clamp(2rem,7vw,4.8rem);letter-spacing:.14em;line-height:1;text-shadow:4px 4px 0 #6e4b11}.star-on{color:#ffd84d}.star-off{color:#52645c}
+  #toast{position:fixed;z-index:40;left:50%;top:16px;transform:translate(-50%,-150px);background:#103d31;border:2px solid #6effa0;padding:12px 18px;font-weight:900;box-shadow:0 5px 0 #061713;transition:transform .28s;max-width:92%;text-align:center}
+  #toast.show{transform:translate(-50%,0)}
+  .hint{color:var(--muted);font-size:.85rem}
+  .roster-box{position:relative;z-index:1;margin-top:20px;background:rgba(247,255,248,.94);border:4px solid #1cac3e;box-shadow:0 6px 0 #116d2b;padding:14px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left}
+  .roster-title{font-family:"Press Start 2P",monospace;font-size:.6rem;color:#0d3f22;line-height:1.6}
+  .roster-help{color:#2c5b3b;font-size:.74rem;margin-top:6px}
+  .roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .roster-grid input{width:100%;padding:7px 8px;border:3px solid #1cac3e;background:#fff;color:#08301c;font-weight:800;font-size:.8rem}
+  .roster-grid input:focus-visible{outline:3px solid #0d3f22;outline-offset:2px}
+  @media(max-width:520px){.roster-grid{grid-template-columns:1fr}}
+  .turn-chip{background:#3d2f0a;border:1px solid #e5ae28;color:#ffe9a3;padding:.55rem .75rem;font-weight:900}
+  .score-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.85rem}
+  .score-table th,.score-table td{border:2px solid #245e54;padding:8px 9px;text-align:left}
+  .score-table th{background:#123e36;font-family:"Press Start 2P",monospace;font-size:.52rem;line-height:1.7;color:#bdf7d9}
+  .score-table td.num{text-align:center;font-weight:900}
+  .code-box{width:100%;margin-top:10px;padding:9px;background:#041411;border:2px solid #21695b;color:#76ffc7;font-family:monospace;font-size:.72rem;min-height:74px;resize:vertical}
+  .sync-status{margin-top:10px;font-size:.8rem;font-weight:800}
+  .sync-ok{color:#7bffb2}
+  .sync-wait{color:#ffe08a}
+  .sync-fail{color:#ff9d9d}
+  @media print{.pixel-button,#sound-button,#toast{display:none!important}body,#game-root{background:#fff}.mission,.pixel-panel,.rank-card{color:#000;background:#fff;box-shadow:none}.score-table th{color:#000;background:#eee}}
+  @media(max-width:640px){.game-shell{padding:6px}.header-copy{display:none}.pixel-font{font-size:.44rem}.hud{padding:8px!important}.pixel-panel{padding:12px!important}.choice,.action-card{padding:8px 9px;font-size:.78rem;line-height:1.3}.pixel-button{padding:9px 11px;font-size:.72rem}.hacker-portrait{transform:scale(.62);margin-bottom:-28px}}
+  @media(max-width:420px){.game-shell{padding:4px}.choice,.action-card{font-size:.7rem}.tech-chip{padding:.35rem .45rem;font-size:.7rem}}
+</style>
+</head>
+<body>
+<div id="game-root">
+  <section id="start-screen" class="start-screen" aria-labelledby="start-title">
+    <div class="pixel-landscape" aria-hidden="true"><div class="pixel-house"></div></div>
+    <div class="start-card">
+      <h1 id="start-title" class="start-title"></h1>
+      <div id="start-group" class="start-group"></div>
+      <div class="roster-box">
+        <p class="roster-title">INTEGRANTES DEL GRUPO</p>
+        <p class="roster-help">Escriban los 6 nombres. Cada integrante juega una misión y el juego anota los puntos que gana cada uno.</p>
+        <div class="roster-grid">
+          <input id="student-1" type="text" placeholder="1) Nombre y apellido" autocomplete="off">
+          <input id="student-2" type="text" placeholder="2) Nombre y apellido" autocomplete="off">
+          <input id="student-3" type="text" placeholder="3) Nombre y apellido" autocomplete="off">
+          <input id="student-4" type="text" placeholder="4) Nombre y apellido" autocomplete="off">
+          <input id="student-5" type="text" placeholder="5) Nombre y apellido" autocomplete="off">
+          <input id="student-6" type="text" placeholder="6) Nombre y apellido" autocomplete="off">
+        </div>
+      </div>
+      <button id="start-button" class="start-button" type="button">INICIO</button>
+    </div>
+  </section>
+
+  <header class="game-shell pt-5">
+    <div class="hud p-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="logo-block" aria-hidden="true">🛠️</div>
+        <div class="header-copy">
+          <h1 id="game-title" class="font-extrabold leading-tight"></h1>
+          <p id="game-subtitle" class="mt-1 hint"></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-sm font-bold">
+        <div class="tech-chip">⭐ <span id="score">0</span></div>
+        <div class="tech-chip">🔥 <span id="streak">0</span></div>
+        <div class="turn-chip">🎮 TURNO: <span id="turn-name">Alumno/a 1</span></div>
+        <button id="sound-button" class="pixel-button text-sm" type="button">🔊 Sonido activo</button>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center gap-3">
+      <span id="level-count" class="pixel-font whitespace-nowrap">MISIÓN 1/6</span>
+      <div class="progress-track flex-1"><div id="progress" class="progress-fill"></div></div>
+    </div>
+  </header>
+
+  <main class="game-shell pb-12">
+    <div id="missions-host"></div>
+
+    <section id="mission-6" class="mission" aria-labelledby="boss-title">
+      <div class="pixel-panel p-6 md:p-10">
+        <span id="boss-kicker" class="pixel-tag"></span>
+        <h2 id="boss-title" class="mt-5 font-extrabold text-2xl"></h2>
+        <div id="hacker-intro" class="hacker-stage mt-6 p-6 md:p-8 text-center">
+          <div class="hacker-portrait" aria-hidden="true"></div>
+          <p class="noise mt-3" aria-hidden="true">░▒▓ INTERFERENCIA ▓▒░</p>
+          <h3 id="hacker-title" class="mt-5 font-extrabold text-xl"></h3>
+          <p id="hacker-laugh" class="mt-3 font-bold"></p>
+          <p id="hacker-message" class="mt-4 max-w-2xl mx-auto"></p>
+          <div class="terminal mt-5 max-w-xl mx-auto p-4 text-left">
+            <p class="code-line">&gt; ACCESO_NO_AUTORIZADO...</p>
+            <p class="code-line">&gt; ARCHIVOS_EN_RIESGO</p>
+          </div>
+          <button id="skip-hacker" class="pixel-button mt-6" type="button">Enfrentar al hacker ▶</button>
+        </div>
+        <div id="boss-gameplay" class="hidden">
+          <p id="boss-intro" class="mt-6"></p>
+          <p class="hint mt-2">Elegí TODAS las acciones correctas y ninguna peligrosa.</p>
+          <div id="boss-actions" class="mt-6 grid md:grid-cols-2 gap-3"></div>
+          <button id="check-boss" class="pixel-button mt-6" type="button">Ejecutar defensa</button>
+          <p id="feedback-6" class="feedback mt-4" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="capture-screen" class="mission" aria-labelledby="capture-title">
+      <div class="capture-stage p-7 md:p-12 text-center">
+        <div class="text-6xl" aria-hidden="true">👮‍♂️</div>
+        <h2 id="capture-title" class="mt-5 font-extrabold text-2xl"></h2>
+        <p id="capture-text" class="mt-4 max-w-2xl mx-auto"></p>
+      </div>
+    </section>
+
+    <section id="final-screen" class="mission" aria-labelledby="final-title">
+      <div class="pixel-panel p-7 md:p-12 text-center">
+        <div class="text-6xl" aria-hidden="true">🏆</div>
+        <h2 id="final-title" class="mt-5 font-extrabold text-2xl"></h2>
+        <p id="final-text" class="mt-3 max-w-2xl mx-auto"></p>
+        <div class="rank-card mt-7 max-w-2xl mx-auto p-6">
+          <p class="pixel-font">PUNTAJE FINAL</p>
+          <p id="final-score" class="mt-3 text-4xl font-extrabold text-yellow-300"></p>
+          <div id="final-stars" class="star-line mt-5" aria-label="Calificación de estrellas"></div>
+          <p id="rank-message" class="mt-5 font-bold" aria-live="polite"></p>
+        </div>
+
+        <div class="rank-card mt-7 max-w-2xl mx-auto p-5 text-left">
+          <p class="pixel-font">PUNTAJE POR INTEGRANTE</p>
+          <table class="score-table">
+            <thead>
+              <tr><th>#</th><th>Integrante</th><th>Misión</th><th>Puntos</th><th>Errores</th><th>Nivel</th></tr>
+            </thead>
+            <tbody id="students-body"></tbody>
+          </table>
+          <p id="session-info" class="hint mt-3"></p>
+          <div class="flex flex-wrap gap-3 mt-4">
+            <button id="download-csv" class="pixel-button" type="button">⬇️ Descargar planilla</button>
+            <button id="copy-code" class="pixel-button" type="button">📋 Copiar código</button>
+            <button id="print-report" class="pixel-button" type="button">🖨️ Imprimir</button>
+          </div>
+          <p class="hint mt-3">Código de resultado para pegar en el panel del profesor:</p>
+          <textarea id="result-code" class="code-box" readonly aria-label="Código de resultado"></textarea>
+          <p id="sync-status" class="sync-status" aria-live="polite"></p>
+          <button id="retry-send" class="pixel-button mt-3 hidden" type="button">🔄 Reintentar envío</button>
+        </div>
+
+        <button id="restart-game" class="pixel-button mt-8" type="button">Jugar de nuevo</button>
+      </div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<!--
+  ===========================================================
+  CONFIGURACION DEL REGISTRO DE PUNTAJES (editar solo aca)
+  1) endpoint: pega el enlace que termina en /exec de tu app
+     de Google Apps Script (paso 3 de las instrucciones).
+  2) clave: la misma palabra que pusiste en el codigo del
+     servidor (por defecto: epet10-2026).
+  Si dejas endpoint vacio, el juego funciona igual pero sin
+  enviar los resultados automaticamente.
+  ===========================================================
+-->
+<script id="registro-config" type="application/json">
+{
+  "endpoint": "https://script.google.com/macros/s/AKfycbw10qLO1Z9dYYKnTn83pplOlhdJbEizcLMs6BUf6RhpAI0wwf5iSkD4ADOzcUnmeV-1hQ/exec",
+  "clave": "epet10-2026"
+}
+</script>
+<script id="game-content" type="application/json">{"startTitle": ["PERFIL", "TÉCNICO"], "group": "GRUPO 1 · EL PERFIL PROFESIONAL", "title": "Misión 1: ¿Quién es el Técnico en Informática?", "subtitle": "Grupo 1 · Perfil profesional y áreas de competencia", "missions": [{"kicker": "MISIÓN 1 · EL TÍTULO", "title": "El marco oficial de la carrera", "intro": "Estás en la primera clase de Prácticas Profesionalizantes y el profesor pregunta qué norma respalda oficialmente el título de Técnico en Informática Profesional y Personal. ¿Qué contestás?", "type": "single", "choices": [{"text": "La Resolución N°68/98 del CFCyE, que le da un marco oficial y reconocido a nivel nacional.", "correct": true}, {"text": "Ninguna norma: cada escuela decide libremente qué enseñar y qué título entregar.", "correct": false}, {"text": "Un certificado de una empresa privada de tecnología.", "correct": false}, {"text": "Solamente el reglamento interno del colegio.", "correct": false}], "terminal": null, "ok": "Correcto. Esa es la decisión profesional.", "bad": "Casi. Pensá cuál es la opción más segura y profesional."}, {"kicker": "MISIÓN 2 · EL ALCANCE", "title": "¿Hasta dónde llega el trabajo del técnico?", "intro": "Una vecina te pide ayuda con su computadora, pero no entiende qué hace exactamente un técnico. Elegí la descripción que mejor define el alcance del perfil.", "type": "single", "choices": [{"text": "Solo vender computadoras armadas en un local comercial.", "correct": false}, {"text": "Brindar instalación, capacitación, mantenimiento primario y resolución de problemas, actuando de nexo entre el especialista y el usuario final.", "correct": true}, {"text": "Desarrollar exclusivamente videojuegos y aplicaciones móviles complejas.", "correct": false}, {"text": "Diseñar desde cero sistemas críticos para grandes bancos.", "correct": false}], "terminal": null, "ok": "Correcto. Esa es la decisión profesional.", "bad": "Casi. Pensá cuál es la opción más segura y profesional."}, {"kicker": "MISIÓN 3 · FACILITAR LA OPERATORIA", "title": "El usuario no encuentra sus archivos", "intro": "Un usuario guarda todo en el Escritorio: fotos, tareas, facturas y descargas, todo mezclado. Cada vez que necesita algo pierde diez minutos buscándolo. Según el área de competencia 'facilitar la operatoria del usuario', ¿cómo actuás?", "type": "single", "choices": [{"text": "Le borrás los archivos que te parecen innecesarios para que quede prolijo.", "correct": false}, {"text": "Le decís que se organice solo, porque eso no es tarea del técnico.", "correct": false}, {"text": "Estructurás la organización de sus datos en carpetas con criterio y le enseñás el procedimiento para mantenerla.", "correct": true}, {"text": "Le instalás cinco programas de búsqueda para que después se arregle.", "correct": false}], "terminal": ["ERROR: ARCHIVOS_NO_ENCONTRADOS", "ACCIÓN: ORGANIZAR_DIRECTORIOS"], "ok": "Correcto. Esa es la decisión profesional.", "bad": "Casi. Pensá cuál es la opción más segura y profesional."}, {"kicker": "MISIÓN 4 · ÁREAS DE COMPETENCIA", "title": "¿Qué entra en el perfil?", "intro": "Llegan cinco pedidos al taller escolar. Marcá los que SÍ corresponden a las áreas de competencia del Técnico en Informática Profesional y Personal.", "type": "multi", "actions": [{"text": "Instalar y poner en marcha equipos, programas y componentes de red.", "safe": true}, {"text": "Capacitar y asesorar al usuario para que aproveche la funcionalidad de sus equipos.", "safe": true}, {"text": "Mantener la integridad de los datos locales del usuario con resguardos preventivos.", "safe": true}, {"text": "Optimizar el ambiente informático de trabajo del usuario.", "safe": true}, {"text": "Firmar los balances contables y las declaraciones de impuestos de la empresa.", "safe": false}, {"text": "Diseñar el sistema crítico central de un hospital sin ningún equipo de especialistas.", "safe": false}], "checkLabel": "Confirmar competencias", "terminal": null, "ok": "Selección perfecta: reconociste las áreas de competencia del perfil.", "bad": "Revisá la lista: faltan opciones correctas o marcaste alguna incorrecta."}, {"kicker": "MISIÓN 5 · AUTOGESTIÓN", "title": "Trabajar sin supervisión directa", "intro": "El perfil dice que este técnico suele trabajar en forma individual y sin supervisión directa. Tenés tres visitas el mismo día y una urgencia nueva. ¿Qué hacés?", "type": "single", "choices": [{"text": "Planificás y administrás tus tiempos, anticipás necesidades del cliente y avisás si una visita se reprograma.", "correct": true}, {"text": "Aceptás todo sin planificar y después ves qué pasa.", "correct": false}, {"text": "Esperás a que alguien te diga en qué orden trabajar.", "correct": false}, {"text": "Cancelás todas las visitas sin avisar a nadie.", "correct": false}], "terminal": null, "ok": "Correcto. Esa es la decisión profesional.", "bad": "Casi. Pensá cuál es la opción más segura y profesional."}], "boss": {"kicker": "MISIÓN 6 · JEFE FINAL", "title": "El hacker del perfil falso", "hackerTitle": "SEÑAL INTERCEPTADA", "hackerLaugh": "¡Jajaja! Nadie sabe realmente qué hace un técnico...", "hackerMessage": "Entré a la red de la escuela y cambié el documento del perfil profesional: mezclé funciones reales con inventos míos. Si el grupo no distingue las verdaderas, la capacitación se cae.", "speech": "Cambié el documento del perfil profesional y mezclé funciones falsas entre las verdaderas. Demostrá que conocés tu profesión.", "intro": "Recuperá el documento: marcá solo las funciones que realmente ejerce el Técnico en Informática Profesional y Personal.", "actions": [{"text": "Instruir al usuario para eliminar las causas de sus problemas operativos.", "safe": true}, {"text": "Diagnosticar fallas y evaluar alternativas de solución.", "safe": true}, {"text": "Resguardar y restaurar los archivos locales del usuario.", "safe": true}, {"text": "Apoyar técnicamente la compra o venta de productos informáticos.", "safe": true}, {"text": "Publicar las contraseñas de los usuarios en un grupo público.", "safe": false}, {"text": "Cobrar por 'arreglos' que nunca se hicieron.", "safe": false}], "ok": "Documento restaurado. El perfil profesional volvió a su versión correcta.", "bad": "Todavía hay datos alterados: revisá función por función."}, "capture": {"title": "¡Hacker detenido!", "text": "Con el registro de tus decisiones, la policía cibernética rastreó al intruso. El documento del perfil profesional quedó a salvo.", "speech": "Muchas gracias, querido informático."}, "final": {"title": "Grupo 1: misión cumplida", "text": "Dominás el alcance del perfil, las áreas de competencia y las funciones del Técnico en Informática Profesional y Personal."}, "school": "E.P.E.T. N° 10", "course": "7° II · 2026 · Prácticas Profesionalizantes", "teacher": "Prof. Cristian Morel"}</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const C = JSON.parse(document.getElementById("game-content").textContent);
+
+  const setVh = () => document.documentElement.style.setProperty("--vh", (window.innerHeight * 0.01) + "px");
+  setVh(); window.addEventListener("resize", setVh);
+
+  let score = 0, streak = 0, soundOn = true, audioCtx = null, ambienceTimer = null;
+  const completed = new Set();
+  const totalMissions = 6;
+  const selections = {};
+
+  /* ---------- registro por integrante ---------- */
+  let currentMission = 1;
+  const students = Array.from({ length: 6 }, (_, i) => ({
+    name: "", points: 0, errors: 0, bonus: 0, mission: i + 1
+  }));
+  const startedAt = new Date();
+
+  function activeStudent(){ return students[Math.min(currentMission, 6) - 1]; }
+  function studentLabel(i){ return students[i].name || ("Alumno/a " + (i + 1)); }
+  function updateTurn(){
+    document.getElementById("turn-name").textContent = studentLabel(Math.min(currentMission, 6) - 1);
+  }
+  function readRoster(){
+    for(let i = 0; i < 6; i++){
+      const field = document.getElementById("student-" + (i + 1));
+      students[i].name = ((field && field.value) || "").trim().slice(0, 40);
+    }
+  }
+  function levelFor(s){
+    if(s.points >= 200) return "Excelente";
+    if(s.points >= 100 && s.errors === 0) return "Muy bueno";
+    if(s.points >= 100) return "Bueno";
+    return "A reforzar";
+  }
+
+
+  /* ---------- audio ---------- */
+  function getAudio(){
+    if(!window.AudioContext && !window.webkitAudioContext) return null;
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    audioCtx = audioCtx || new Ctor();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, duration, type = "square", volume = 0.04, when = 0){
+    if(!soundOn) return;
+    const ctx = getAudio(); if(!ctx) return;
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + when);
+    gain.gain.setValueAtTime(Math.min(volume * 2.6, .95), ctx.currentTime + when);
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + when + duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + when); osc.stop(ctx.currentTime + when + duration + .02);
+  }
+  function sound(notes, type = "square", volume = .035){
+    notes.forEach((n, i) => tone(n, .13, type, volume, i * .09));
+  }
+  function hackerLaugh(){
+    if(!soundOn) return;
+    const ctx = getAudio(); if(!ctx) return;
+    [0,.22,.45].forEach((time, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(165 + i * 18, ctx.currentTime + time);
+      osc.frequency.exponentialRampToValueAtTime(82, ctx.currentTime + time + .18);
+      gain.gain.setValueAtTime(.08, ctx.currentTime + time);
+      gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + time + .2);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + time); osc.stop(ctx.currentTime + time + .21);
+    });
+  }
+  function ambientLoop(){
+    clearInterval(ambienceTimer);
+    if(!soundOn) return;
+    const phrase = [110,0,146.8,0,123.5,0,164.8,0];
+    let i = 0;
+    ambienceTimer = setInterval(() => {
+      if(!soundOn) return;
+      const note = phrase[i++ % phrase.length];
+      if(note) tone(note, .18, "triangle", .012);
+    }, 280);
+  }
+  function say(text, rate, pitch){
+    if(!soundOn || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-AR"; u.rate = rate; u.pitch = pitch; u.volume = .95;
+    speechSynthesis.speak(u);
+  }
+
+  /* ---------- helpers ---------- */
+  function toast(message){
+    const el = document.getElementById("toast");
+    el.textContent = message; el.classList.add("show");
+    clearTimeout(el.timer);
+    el.timer = setTimeout(() => el.classList.remove("show"), 2400);
+  }
+  function shuffle(list){
+    const a = list.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function make(tag, cls, text){
+    const node = document.createElement(tag);
+    if(cls) node.className = cls;
+    if(text != null) node.textContent = text;
+    return node;
+  }
+
+  /* ---------- static text ---------- */
+  const startTitle = document.getElementById("start-title");
+  C.startTitle.forEach((line, i) => {
+    if(i) startTitle.appendChild(document.createElement("br"));
+    startTitle.appendChild(document.createTextNode(line));
+  });
+  document.getElementById("start-group").textContent = C.group;
+  document.getElementById("game-title").textContent = C.title;
+  document.getElementById("game-subtitle").textContent = C.subtitle;
+  document.getElementById("boss-kicker").textContent = C.boss.kicker;
+  document.getElementById("boss-title").textContent = C.boss.title;
+  document.getElementById("hacker-title").textContent = C.boss.hackerTitle;
+  document.getElementById("hacker-laugh").textContent = C.boss.hackerLaugh;
+  document.getElementById("hacker-message").textContent = C.boss.hackerMessage;
+  document.getElementById("boss-intro").textContent = C.boss.intro;
+  document.getElementById("capture-title").textContent = C.capture.title;
+  document.getElementById("capture-text").textContent = C.capture.text;
+  document.getElementById("final-title").textContent = C.final.title;
+  document.getElementById("final-text").textContent = C.final.text;
+
+  /* ---------- render missions 1..5 ---------- */
+  const host = document.getElementById("missions-host");
+
+  function renderSingle(panel, mission, number){
+    const group = make("div", "mt-7 grid gap-3");
+    shuffle(mission.choices).forEach(choice => {
+      const button = make("button", "choice", choice.text);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        if(group.dataset.done) return;
+        const feedback = document.getElementById("feedback-" + number);
+        if(choice.correct){
+          group.dataset.done = "true";
+          button.classList.add("correct");
+          feedback.textContent = "\u2713 " + mission.ok;
+          setTimeout(() => completeLevel(number), 600);
+        } else {
+          button.classList.add("wrong");
+          button.disabled = true;
+          feedback.textContent = mission.bad;
+          resetStreak();
+        }
+      });
+      group.appendChild(button);
+    });
+    panel.appendChild(group);
+  }
+
+  function renderMulti(panel, mission, number){
+    panel.appendChild(make("p", "hint mt-5", "Eleg\u00ED TODAS las opciones correctas y ninguna incorrecta."));
+    const box = make("div", "mt-3 grid md:grid-cols-2 gap-3");
+    const picked = new Set();
+    selections[number] = picked;
+    const buttons = [];
+    shuffle(mission.actions).forEach(action => {
+      const button = make("button", "action-card", action.text);
+      button.type = "button";
+      button.dataset.safe = action.safe ? "true" : "false";
+      button.addEventListener("click", () => {
+        if(box.dataset.done) return;
+        button.classList.toggle("selected");
+        button.classList.contains("selected") ? picked.add(button) : picked.delete(button);
+        tone(330, .08, "square", .015);
+      });
+      buttons.push(button);
+      box.appendChild(button);
+    });
+    panel.appendChild(box);
+
+    const check = make("button", "pixel-button mt-6", mission.checkLabel || "Confirmar selecci\u00F3n");
+    check.type = "button";
+    check.addEventListener("click", () => {
+      if(box.dataset.done) return;
+      const feedback = document.getElementById("feedback-" + number);
+      let ok = true;
+      buttons.forEach(button => {
+        const isSafe = button.dataset.safe === "true";
+        const isPicked = picked.has(button);
+        if(isPicked && isSafe) button.classList.add("safe");
+        if(isPicked && !isSafe){ button.classList.add("danger"); ok = false; }
+        if(!isPicked && isSafe) ok = false;
+      });
+      if(ok){
+        box.dataset.done = "true";
+        feedback.textContent = "\u{1F6E1}\u{FE0F} " + mission.ok;
+        completeLevel(number);
+      } else {
+        buttons.forEach(b => b.classList.remove("safe", "danger"));
+        feedback.textContent = mission.bad;
+        resetStreak();
+      }
+    });
+    panel.appendChild(check);
+  }
+
+  C.missions.forEach((mission, index) => {
+    const number = index + 1;
+    const section = make("section", "mission" + (number === 1 ? " active" : ""));
+    section.id = "mission-" + number;
+    const panel = make("div", "pixel-panel p-4 md:p-8");
+    panel.appendChild(make("span", "pixel-tag", mission.kicker));
+    panel.appendChild(make("h2", "mt-5 font-extrabold text-xl md:text-2xl", mission.title));
+    panel.appendChild(make("p", "mt-3 max-w-3xl", mission.intro));
+    if(mission.terminal){
+      const terminal = make("div", "terminal mt-6 p-5");
+      mission.terminal.forEach(line => terminal.appendChild(make("p", "code-line", "> " + line)));
+      panel.appendChild(terminal);
+    }
+    if(mission.type === "multi") renderMulti(panel, mission, number);
+    else renderSingle(panel, mission, number);
+    const feedback = make("p", "feedback mt-5");
+    feedback.id = "feedback-" + number;
+    feedback.setAttribute("aria-live", "polite");
+    panel.appendChild(feedback);
+    section.appendChild(panel);
+    host.appendChild(section);
+  });
+
+  /* ---------- boss ---------- */
+  const bossBox = document.getElementById("boss-actions");
+  const bossPicked = new Set();
+  const bossButtons = [];
+  shuffle(C.boss.actions).forEach(action => {
+    const button = make("button", "action-card", action.text);
+    button.type = "button";
+    button.dataset.safe = action.safe ? "true" : "false";
+    button.addEventListener("click", () => {
+      if(bossBox.dataset.done) return;
+      button.classList.toggle("selected");
+      button.classList.contains("selected") ? bossPicked.add(button) : bossPicked.delete(button);
+      tone(330, .08, "square", .015);
+    });
+    bossButtons.push(button);
+    bossBox.appendChild(button);
+  });
+  document.getElementById("check-boss").addEventListener("click", () => {
+    if(bossBox.dataset.done) return;
+    const feedback = document.getElementById("feedback-6");
+    let ok = true;
+    bossButtons.forEach(button => {
+      const isSafe = button.dataset.safe === "true";
+      const isPicked = bossPicked.has(button);
+      if(isPicked && isSafe) button.classList.add("safe");
+      if(isPicked && !isSafe){ button.classList.add("danger"); ok = false; }
+      if(!isPicked && isSafe) ok = false;
+    });
+    if(ok){
+      bossBox.dataset.done = "true";
+      feedback.textContent = "\u{1F6E1}\u{FE0F} " + C.boss.ok;
+      completeLevel(6);
+    } else {
+      bossButtons.forEach(b => b.classList.remove("safe", "danger"));
+      feedback.textContent = C.boss.bad;
+      resetStreak();
+    }
+  });
+
+  /* ---------- flow ---------- */
+  function updateHud(){
+    document.getElementById("score").textContent = score;
+    document.getElementById("streak").textContent = streak;
+  }
+  function addPoints(){
+    score += 100; streak++;
+    const s = activeStudent();
+    s.points += 100;
+    if(streak === 3){
+      score += 100; streak = 0; s.points += 100; s.bonus += 100;
+      toast("\u{1F525} \u00A1Racha tecnol\u00F3gica! Bonus +100");
+    }
+    updateHud(); sound([523,659,784]);
+  }
+  function resetStreak(){
+    streak = 0;
+    activeStudent().errors += 1;
+    updateHud(); sound([180,135], "sawtooth", .025);
+  }
+
+  function setView(id, label, progress){
+    document.querySelectorAll(".mission").forEach(el => el.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.getElementById("level-count").textContent = label;
+    document.getElementById("progress").style.width = progress + "%";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  let bossTimer = null;
+  function revealBoss(){
+    clearTimeout(bossTimer);
+    if("speechSynthesis" in window) speechSynthesis.cancel();
+    document.getElementById("hacker-intro").classList.add("hidden");
+    document.getElementById("boss-gameplay").classList.remove("hidden");
+  }
+  document.getElementById("skip-hacker").addEventListener("click", revealBoss);
+
+  function showMission(number){
+    currentMission = number;
+    updateTurn();
+    if(number === 6){
+      setView("mission-6", "MISI\u00D3N 6/6 \u00B7 JEFE", 83);
+      document.getElementById("hacker-intro").classList.remove("hidden");
+      document.getElementById("boss-gameplay").classList.add("hidden");
+      setTimeout(() => {
+        hackerLaugh();
+        say(C.boss.speech, .68, .42);
+        toast("\u26A0\uFE0F Ataque detectado. Escuch\u00E1 el mensaje y eleg\u00ED las defensas correctas.");
+      }, 450);
+      bossTimer = setTimeout(revealBoss, 12000);
+      return;
+    }
+    setView("mission-" + number, "MISI\u00D3N " + number + "/6", ((number - 1) / totalMissions) * 100);
+  }
+
+  function completeLevel(level){
+    if(completed.has(level)) return;
+    completed.add(level); addPoints();
+    toast("\u{1F3C6} Misi\u00F3n superada: +100 puntos");
+    if(level < 6){ setTimeout(() => showMission(level + 1), 700); return; }
+    setTimeout(() => {
+      setView("capture-screen", "HACKER DETENIDO", 100);
+      sound([392,523,659,784], "triangle", .05);
+      say(C.capture.speech, .72, .38);
+      setTimeout(renderFinal, 6500);
+    }, 800);
+  }
+
+  function renderFinal(){
+    const stars = score >= 800 ? 5 : score >= 700 ? 4 : score >= 600 ? 3 : score >= 400 ? 2 : 1;
+    const messages = ["",
+      "La aventura contin\u00FAa: cada pr\u00E1ctica suma experiencia.",
+      "Buen esfuerzo: ya conoc\u00E9s decisiones t\u00E9cnicas importantes.",
+      "\u00A1Buen trabajo! Resolviste con criterio profesional.",
+      "\u00A1Maestro t\u00E9cnico! Casi sin errores.",
+      "\u00A1Leyenda tecnol\u00F3gica! Desempe\u00F1o impecable."];
+    document.getElementById("final-score").textContent = score + " puntos";
+    const starsHost = document.getElementById("final-stars");
+    starsHost.textContent = "";
+    for(let i = 0; i < 5; i++) starsHost.appendChild(make("span", i < stars ? "star-on" : "star-off", "\u2605"));
+    document.getElementById("rank-message").textContent = messages[stars];
+    renderScoreboard();
+    setView("final-screen", "AVENTURA COMPLETADA", 100);
+    sound([523,659,784,1046], "triangle", .055);
+    setTimeout(sendResults, 300);
+  }
+
+  /* ---------- planilla de resultados ---------- */
+  function stars5(){
+    return score >= 800 ? 5 : score >= 700 ? 4 : score >= 600 ? 3 : score >= 400 ? 2 : 1;
+  }
+  function stamp(){
+    const p = n => String(n).padStart(2, "0");
+    const d = new Date();
+    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function minutesPlayed(){
+    return Math.max(1, Math.round((Date.now() - startedAt.getTime()) / 60000));
+  }
+  function renderScoreboard(){
+    const body = document.getElementById("students-body");
+    body.textContent = "";
+    students.forEach((s, i) => {
+      const row = document.createElement("tr");
+      row.appendChild(make("td", "num", String(i + 1)));
+      row.appendChild(make("td", null, studentLabel(i)));
+      row.appendChild(make("td", "num", String(s.mission)));
+      row.appendChild(make("td", "num", String(s.points)));
+      row.appendChild(make("td", "num", String(s.errors)));
+      row.appendChild(make("td", null, levelFor(s)));
+      body.appendChild(row);
+    });
+    const totalRow = document.createElement("tr");
+    totalRow.appendChild(make("td", null, ""));
+    const label = make("td", null, "TOTAL DEL GRUPO");
+    label.style.fontWeight = "900";
+    totalRow.appendChild(label);
+    totalRow.appendChild(make("td", "num", "6"));
+    totalRow.appendChild(make("td", "num", String(score)));
+    totalRow.appendChild(make("td", "num", String(students.reduce((a, s) => a + s.errors, 0))));
+    totalRow.appendChild(make("td", "num", stars5() + "/5 \u2605"));
+    body.appendChild(totalRow);
+
+    document.getElementById("session-info").textContent =
+      C.group + " \u00B7 " + stamp() + " \u00B7 duraci\u00F3n aprox. " + minutesPlayed() + " min";
+    document.getElementById("result-code").value = buildCsv();
+  }
+  function csvCell(value){
+    const text = String(value == null ? "" : value);
+    return /[";,\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+  function buildCsv(){
+    const rows = [];
+    rows.push(["Grupo", C.group]);
+    rows.push(["Tema", C.title]);
+    rows.push(["Fecha", stamp()]);
+    rows.push(["Puntaje del grupo", score]);
+    rows.push(["Estrellas", stars5() + "/5"]);
+    rows.push([]);
+    rows.push(["N\u00B0", "Integrante", "Misi\u00F3n", "Puntos", "Bonus", "Errores", "Nivel"]);
+    students.forEach((s, i) => {
+      rows.push([i + 1, studentLabel(i), s.mission, s.points, s.bonus, s.errors, levelFor(s)]);
+    });
+    rows.push(["", "TOTAL DEL GRUPO", 6, score,
+      students.reduce((a, s) => a + s.bonus, 0),
+      students.reduce((a, s) => a + s.errors, 0), ""]);
+    return rows.map(r => r.map(csvCell).join(";")).join("\n");
+  }
+  function slug(text){
+    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "grupo";
+  }
+  document.getElementById("download-csv").addEventListener("click", () => {
+    const blob = new Blob(["\uFEFF" + buildCsv()], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "puntajes_" + slug(C.group) + ".csv";
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast("\u{1F4C4} Planilla descargada");
+  });
+  document.getElementById("copy-code").addEventListener("click", () => {
+    const area = document.getElementById("result-code");
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(area.value)
+        .then(() => toast("\u{1F4CB} C\u00F3digo copiado"))
+        .catch(() => { area.select(); toast("Copialo con Ctrl+C"); });
+    } else {
+      area.select();
+      toast("Copialo con Ctrl+C");
+    }
+  });
+  document.getElementById("print-report").addEventListener("click", () => window.print());
+
+  /* ---------- envío automático al registro del profesor ---------- */
+  let CFG = { endpoint: "", clave: "" };
+  try { CFG = JSON.parse(document.getElementById("registro-config").textContent) || CFG; }
+  catch(e) { CFG = { endpoint: "", clave: "" }; }
+
+  function statusMsg(text, cls){
+    const node = document.getElementById("sync-status");
+    node.textContent = text;
+    node.className = "sync-status " + (cls || "");
+  }
+  function payloadForServer(){
+    return {
+      clave: CFG.clave || "",
+      grupo: C.group,
+      tema: C.title,
+      escuela: C.school || "",
+      curso: C.course || "",
+      profesor: C.teacher || "",
+      puntaje_grupo: score,
+      estrellas: stars5(),
+      errores_grupo: students.reduce((a, s) => a + s.errors, 0),
+      duracion_min: minutesPlayed(),
+      fecha_local: stamp(),
+      integrantes: students.map((s, i) => ({
+        numero: i + 1,
+        nombre: studentLabel(i),
+        mision: s.mission,
+        puntos: s.points,
+        bonus: s.bonus,
+        errores: s.errors,
+        nivel: levelFor(s)
+      }))
+    };
+  }
+  function pendingKey(){ return "pendiente_" + slug(C.group); }
+  function sendResults(){
+    if(!CFG.endpoint){
+      statusMsg("\u{1F4CB} Env\u00EDo autom\u00E1tico no configurado: pas\u00E1le el c\u00F3digo o la planilla al profe.", "sync-wait");
+      return;
+    }
+    const data = payloadForServer();
+    statusMsg("\u23F3 Enviando resultados al registro del profesor...", "sync-wait");
+    document.getElementById("retry-send").classList.add("hidden");
+    fetch(CFG.endpoint, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "text/plain;charset=utf-8" }
+    })
+      .then(r => r.json())
+      .then(res => {
+        if(res && res.ok){
+          statusMsg("\u2705 Resultados enviados al profe. C\u00F3digo de env\u00EDo: " + (res.id || "OK"), "sync-ok");
+          try { localStorage.removeItem(pendingKey()); } catch(e) {}
+        } else {
+          throw new Error((res && res.error) || "respuesta inesperada");
+        }
+      })
+      .catch(() => {
+        statusMsg("\u26A0\uFE0F No se pudo enviar (revis\u00E1 internet). Guardamos el resultado: prob\u00E1 de nuevo o pas\u00E1 la planilla.", "sync-fail");
+        document.getElementById("retry-send").classList.remove("hidden");
+        try { localStorage.setItem(pendingKey(), JSON.stringify(data)); } catch(e) {}
+      });
+  }
+  document.getElementById("retry-send").addEventListener("click", sendResults);
+
+  document.getElementById("start-button").addEventListener("click", () => {
+    readRoster();
+    updateTurn();
+    document.getElementById("start-screen").classList.add("is-hidden");
+    sound([523,659,784], "square", .045);
+    ambientLoop();
+  });
+
+  document.getElementById("sound-button").addEventListener("click", () => {
+    soundOn = !soundOn;
+    document.getElementById("sound-button").textContent = soundOn ? "\u{1F50A} Sonido activo" : "\u{1F507} Sonido";
+    if(soundOn){ sound([523,659]); ambientLoop(); }
+    else { clearInterval(ambienceTimer); if("speechSynthesis" in window) speechSynthesis.cancel(); }
+  });
+
+  document.getElementById("restart-game").addEventListener("click", () => { window.location.reload(); });
+
+  updateHud();
+  showMission(1);
+});
+</script>
+</body>
+</html>
